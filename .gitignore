@@ -3,4 +3,5 @@ __pycache__/
 .venv/
 .env
 .databricks/
+.bundle/
 .DS_Store
