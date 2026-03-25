@@ -67,6 +67,22 @@ Once connected in the Playground:
 
 Switch to the workspace UI — a published Lakeview dashboard, built from conversation.
 
+## Demo Data (IoT)
+
+This repo now includes a demo data generator: `scripts/generate_iot_data.py`.
+
+- `scripts/devices.json`
+- `scripts/sensors.json`
+- `scripts/sensor_readings.json`
+
+Use:
+
+```bash
+python scripts/generate_iot_data.py
+```
+
+Then upload to Unity Catalog volume, or load directly from the files as needed.
+
 ## Architecture
 
 ```

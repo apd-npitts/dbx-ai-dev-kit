@@ -10,4 +10,8 @@ resources:
 
 targets:
   dev:
-    default: true
+    workspace:
+      host: https://aimpt-dev.cloud.databricks.com
+    permissions:
+      - level: CAN_MANAGE
+        user_name: ${workspace.current_user.userName}

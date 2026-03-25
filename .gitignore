@@ -5,3 +5,6 @@ __pycache__/
 .databricks/
 .bundle/
 .DS_Store
+
+# Ignore generated sample data files for demo script
+scripts/*.json
