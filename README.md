@@ -1,106 +1,107 @@
-# Databricks MCP Server App
+# Genie + Codex Demo Workspace
 
-Host the [AI Dev Kit](https://github.com/databricks-solutions/ai-dev-kit) MCP server as a Databricks App — letting you experience 80+ Databricks tools from the AI Playground, no local setup required.
+This repo is a clean Databricks demo workspace for showing how `Codex`, the Databricks `ai-dev-kit`, and `Genie` can work together to create and evolve real assets such as notebooks, jobs, and Lakeflow pipelines.
 
-## What This Is
+The structure is intentionally simple and editable so you can use it live in front of an audience, ask Codex to make changes, and show the result as first-class Databricks resources instead of slideware.
 
-A **3-file wrapper** that takes the open-source `databricks-mcp-server` from the [Databricks Solutions](https://github.com/databricks-solutions) team (stdio transport) and deploys it as a Databricks App with Streamable HTTP transport. The Playground auto-discovers all tools.
+## What This Repo Is For
 
+Use this repo when you want to demonstrate workflows like:
+
+- generating or refining notebooks with Codex
+- building or updating Databricks Jobs from natural-language requirements
+- creating a Lakeflow Spark Declarative Pipeline for bronze, silver, and gold tables
+- preparing governed tables for Genie Spaces
+- iterating quickly with `uv`, Databricks Asset Bundles, and ai-dev-kit tooling
+
+## Repo Layout
+
+```text
+databricks.yml                                # Bundle entrypoint
+resources/
+  jobs.yml                                    # Multi-task demo job
+  pipelines.yml                               # Lakeflow pipeline resource
+src/
+  notebooks/
+    01_seed_demo_data.py                      # Creates schema, volume, and raw demo data
+    02_validate_demo_outputs.py               # Checks pipeline outputs
+  pipelines/
+    genie_demo_pipeline/
+      transformations/
+        telemetry_pipeline.py                 # Bronze/silver/gold pipeline logic
+  genie/
+    genie_space.template.yml                  # Source-of-truth Genie prompt/config scaffold
+scripts/
+  generate_iot_demo_data.py                   # Local synthetic data generator
+  render_genie_space_payload.py               # Renders Genie config to JSON
+docs/
+  demo-flow.md                                # Suggested live demo flow
+  codex-prompts.md                            # Prompt ideas for live Codex use
+  repo-map.md                                 # Quick orientation guide
 ```
-app.py            # 4 lines — import server, expose as HTTP
-app.yaml          # Databricks App config
-requirements.txt  # Pull ai-dev-kit from GitHub
-databricks.yml    # Databricks Asset Bundle config
-```
 
-## Setup
+## Quick Start
 
-### Prerequisites
-- Databricks CLI v0.229.0+ (`databricks --version`)
-- A Databricks workspace with Apps enabled
-- Authenticated CLI profile (`databricks auth login --host <url>`)
-
-### Deploy
-
-This project uses [Databricks Asset Bundles](https://docs.databricks.com/dev-tools/bundles/index.html) for deployment.
+### 1. Install local tooling
 
 ```bash
-# Authenticate
-databricks auth login --host https://your-workspace.cloud.databricks.com
-
-# Validate the bundle
-databricks bundle validate
-
-# Deploy the app resource and sync source code
-databricks bundle deploy
-
-# Start the app (installs packages and launches the server)
-databricks bundle run mcp_ai_dev_kit
-
-# If using a named CLI profile, add --profile to each command:
-databricks bundle deploy --profile <profile-name>
-databricks bundle run mcp_ai_dev_kit --profile <profile-name>
+uv sync
 ```
 
-> **Important:** The app name must start with `mcp-` for the Playground to discover it as a custom MCP server. The default name `mcp-ai-dev-kit` already handles this.
+### 2. Configure bundle variables
 
-### Connect to AI Playground
-
-1. Open your workspace → **AI Playground**
-2. Select a model with the **Tools enabled** label
-3. Click **Tools** → **Add tool** → **MCP Servers**
-4. Add your app's MCP endpoint: `https://<app-url>/mcp`
-5. The Playground auto-discovers all 80+ tools
-
-## Demo Script: Usage Dashboard in 3 Prompts
-
-Once connected in the Playground:
-
-1. **"Query system.billing.usage and show me total DBUs by sku_name for the last 30 days"**
-   → Uses SQL tools
-
-2. **"Create a view called main.default.monthly_usage_summary that aggregates DBUs from system.billing.usage by month and sku_name"**
-   → Uses SQL tools
-
-3. **"Build a clean AI/BI dashboard that shows weekly and monthly usage trends from that view — a line chart for weekly DBUs over time and a bar chart for monthly DBUs by SKU"**
-   → Uses Dashboard tools
-
-Switch to the workspace UI — a published Lakeview dashboard, built from conversation.
-
-## Demo Data (IoT)
-
-This repo now includes a demo data generator: `scripts/generate_iot_data.py`.
-
-- `scripts/devices.json`
-- `scripts/sensors.json`
-- `scripts/sensor_readings.json`
-
-Use:
+Update values at deploy time as needed:
 
 ```bash
-python scripts/generate_iot_data.py
+databricks bundle validate -t dev --var="catalog=main,schema=genie_codex_demo,volume_name=demo_assets,warehouse_id=<warehouse-id>"
 ```
 
-Then upload to Unity Catalog volume, or load directly from the files as needed.
+### 3. Deploy the demo assets
 
-## Architecture
+```bash
+databricks bundle deploy -t dev --var="catalog=main,schema=genie_codex_demo,volume_name=demo_assets,warehouse_id=<warehouse-id>"
+```
 
+### 4. Run the orchestration job
+
+The demo job seeds raw data, refreshes the pipeline, and validates outputs:
+
+```bash
+databricks bundle run demo_orchestration_job -t dev --var="catalog=main,schema=genie_codex_demo,volume_name=demo_assets,warehouse_id=<warehouse-id>"
 ```
-AI Playground ──Streamable HTTP──▶ Databricks App (this repo)
-                                        │
-                                        ▼
-                                  ai-dev-kit MCP Server
-                                  (80+ tools via FastMCP)
-                                        │
-                                        ▼
-                              Databricks APIs (SDK)
-                              ├── SQL Warehouses
-                              ├── Unity Catalog
-                              ├── Jobs / Pipelines
-                              ├── Vector Search
-                              ├── Model Serving
-                              ├── Agent Bricks
-                              ├── AI/BI Dashboards
-                              ├── Genie
-                              └── ...
+
+## Demo Story
+
+The sample assets model an operations telemetry scenario:
+
+- a notebook generates raw IoT-style telemetry data into a Unity Catalog volume
+- a Lakeflow pipeline builds bronze, silver, and gold tables
+- a Databricks Job orchestrates the notebook and pipeline together
+- a Genie Space template points at the curated gold tables for natural-language exploration
+
+This gives you a clean narrative for showing:
+
+1. Codex creating or modifying an asset
+2. ai-dev-kit tools wiring that asset into Databricks resources
+3. Genie answering questions over the resulting data model
+
+## Local Utilities
+
+Generate local demo files:
+
+```bash
+uv run python scripts/generate_iot_demo_data.py --output-dir demo_data
 ```
+
+Render the Genie template into a JSON payload you can use with `create_or_update_genie`:
+
+```bash
+uv run python scripts/render_genie_space_payload.py --catalog main --schema genie_codex_demo --warehouse-id <warehouse-id>
+```
+
+## Suggested Next Moves
+
+- Tailor the table names and prompts to your company's domain
+- Add one or two notebook variations you want Codex to create live
+- Pre-create the schema and warehouse permissions in your demo workspace
+- Use the prompts in [docs/codex-prompts.md](/c:/Users/noahp/Code/dbx-ai-dev-kit/docs/codex-prompts.md) as your live script

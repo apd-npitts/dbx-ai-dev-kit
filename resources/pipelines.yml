@@ -1,0 +1,21 @@
+resources:
+  pipelines:
+    genie_demo_pipeline:
+      name: "[${bundle.target}] Genie Codex Demo Pipeline"
+      catalog: ${var.catalog}
+      target: ${var.schema}
+      libraries:
+        - glob:
+            include: ../src/pipelines/genie_demo_pipeline/transformations/**
+      root_path: ../src/pipelines/genie_demo_pipeline
+      serverless: true
+      continuous: false
+      development: true
+      photon: true
+      channel: current
+      configuration:
+        raw_volume_path: /Volumes/${var.catalog}/${var.schema}/${var.volume_name}/raw/telemetry_events
+        schema_location_base: /Volumes/${var.catalog}/${var.schema}/${var.volume_name}/_schemas
+      permissions:
+        - level: CAN_VIEW
+          group_name: users

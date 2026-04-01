@@ -1,17 +1,31 @@
 bundle:
-  name: mcp-ai-dev-kit
+  name: genie-codex-demo
 
-resources:
-  apps:
-    mcp_ai_dev_kit:
-      name: "mcp-ai-dev-kit"
-      description: "AI Dev Kit MCP Server — 80+ Databricks tools for AI Playground"
-      source_code_path: .
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    default: main
+  schema:
+    default: genie_codex_demo
+  volume_name:
+    default: demo_assets
+  warehouse_id:
+    default: REPLACE_WITH_SQL_WAREHOUSE_ID
+  notification_email:
+    default: ""
 
 targets:
   dev:
+    default: true
+    mode: development
     workspace:
-      host: https://aimpt-dev.cloud.databricks.com
+      profile: DEFAULT
     permissions:
       - level: CAN_MANAGE
         user_name: ${workspace.current_user.userName}
+  prod:
+    mode: production
+    workspace:
+      profile: DEFAULT

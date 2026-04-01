@@ -1,0 +1,24 @@
+display_name: Operations Command Center
+description: Explore curated operational telemetry built by Codex-generated notebooks, jobs, and pipelines.
+instructions: |
+  You are an operations analyst helping users understand telemetry trends, device health,
+  site-level risk, and daily fleet performance. Favor the gold tables first, explain
+  unusual spikes in critical events, and provide concise operational summaries.
+warehouse_id: "{{ warehouse_id }}"
+tables:
+  - "{{ catalog }}.{{ schema }}.gold_site_operations_hourly"
+  - "{{ catalog }}.{{ schema }}.gold_device_daily_summary"
+sample_questions:
+  - Which sites had the most critical events in the last 24 hours?
+  - How does average temperature vary by region?
+  - Which device types are generating the most battery replacement events?
+  - Summarize today's operational risk in one paragraph.
+starter_sql:
+  - name: top_sites_by_critical_events
+    sql: |
+      SELECT site_id, region, SUM(critical_events) AS critical_events
+      FROM {{ catalog }}.{{ schema }}.gold_site_operations_hourly
+      WHERE event_hour >= current_timestamp() - INTERVAL 1 DAY
+      GROUP BY site_id, region
+      ORDER BY critical_events DESC
+      LIMIT 10

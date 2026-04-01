@@ -8,3 +8,4 @@ __pycache__/
 
 # Ignore generated sample data files for demo script
 scripts/*.json
+demo_data/
